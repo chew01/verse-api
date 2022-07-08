@@ -1,20 +1,29 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
-	"net/http"
+	"errors"
+	"github.com/chew01/verse-api/db"
+	"github.com/chew01/verse-api/routes"
+	"github.com/joho/godotenv"
 )
 
-func check(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, "ok")
-}
-
 func main() {
-	router := gin.Default()
-	router.GET("/", check)
-
-	err := router.Run("localhost:8080")
+	err := godotenv.Load()
 	if err != nil {
+		err = errors.New("error loading .env: " + err.Error())
+		panic(err)
+	}
+
+	err = db.Init()
+	if err != nil {
+		err = errors.New("error initializing database pool: " + err.Error())
+		panic(err)
+	}
+
+	router := routes.New()
+	err = router.Run("localhost:8080")
+	if err != nil {
+		err = errors.New("error starting server: " + err.Error())
 		panic(err)
 	}
 }
